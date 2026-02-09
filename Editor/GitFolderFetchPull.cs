@@ -49,7 +49,7 @@ namespace UnityEssentials
 
                 report("Done", 1f);
             },
-            onComplete: () => { /* nothing else to update globally here */ });
+            onComplete: () => { });
         }
 
         private static bool CheckIfBehind(string repositoryPath)
