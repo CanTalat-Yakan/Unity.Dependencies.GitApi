@@ -211,6 +211,9 @@ namespace UnityEssentials
                     {
                         if (string.IsNullOrEmpty(path)) return;
 
+                        // Bump package.json patch version before staging/committing (if package.json exists).
+                        TryBumpPackageJsonPatchVersion(path, out _, out _);
+
                         report("Staging changes...", 0.2f);
                         RunGitCommand(path, "add .");
 

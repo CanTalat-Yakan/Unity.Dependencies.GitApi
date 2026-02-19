@@ -96,6 +96,9 @@ namespace UnityEssentials
             if (emptyCommitMessage = string.IsNullOrEmpty(commitMessage))
                 commitMessage = EmptyCommitMessage;
 
+            // If a package.json exists in the repo root, bump patch version before staging/committing.
+            TryBumpPackageJsonPatchVersion(path, out _, out _);
+
             RunGitCommand(path, "add .");
             var (commitOutput, commitError, exitCode) = RunGitCommand(path, $"commit -m \"{commitMessage}\"");
 
