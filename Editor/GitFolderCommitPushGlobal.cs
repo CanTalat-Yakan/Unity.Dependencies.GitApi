@@ -161,42 +161,6 @@ namespace UnityEssentials
                 Debug.Log($"[Git Sync] {summary}\n{ReportSectionTitle}\n{sbReport}");
             });
         }
-
-        private static bool IsGitRepositoryRoot(string directory)
-        {
-            string gitDirectory = Path.Combine(directory, ".git");
-            return Directory.Exists(gitDirectory) || File.Exists(gitDirectory);
-        }
-
-        private static string FindAncestorGitRepoRoot(string startDir)
-        {
-            try
-            {
-                var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                string directory = Path.GetFullPath(startDir);
-                while (!string.IsNullOrEmpty(directory) && !seen.Contains(directory))
-                {
-                    if (IsGitRepositoryRoot(directory)) return directory;
-                    seen.Add(directory);
-                    var parent = Directory.GetParent(directory);
-                    if (parent == null) break;
-                    directory = parent.FullName;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[Git Sync] Failed to find ancestor repo root from '{startDir}': {e.Message}");
-            }
-            return null;
-        }
-
-        private static string TrimToSingleLine(string value)
-        {
-            if (string.IsNullOrEmpty(value)) return string.Empty;
-            value = value.Replace("\r", "");
-            var index = value.IndexOf('\n');
-            return index >= 0 ? value.Substring(0, index) : value;
-        }
     }
 }
 #endif

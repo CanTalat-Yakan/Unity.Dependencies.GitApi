@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+﻿﻿#if UNITY_EDITOR
 using System;
 using System.IO;
 using System.Diagnostics;
@@ -184,12 +184,85 @@ namespace UnityEssentials
             return RunGitCommand(path, $"push {authenticatedUrl}");
         }
 
+        private static (string output, string error, int exitCode) RunPullGitCommand(string path, string token)
+        {
+            // Pull doesn't always require auth (public repos, cached creds, etc). If no token is present,
+            // attempt a normal pull.
+            if (string.IsNullOrEmpty(token))
+            {
+                return RunGitCommand(path, "pull");
+            }
+
+            // Try to authenticate only for HTTPS remotes.
+            var (remoteOutput, remoteError, remoteExitCode) = RunGitCommand(path, "remote get-url origin");
+            if (remoteExitCode != 0 || string.IsNullOrEmpty(remoteOutput))
+            {
+                return (remoteOutput, remoteError, remoteExitCode);
+            }
+
+            string remoteUrl = remoteOutput.Trim();
+
+            if (remoteUrl.StartsWith("https://"))
+            {
+                var uri = new Uri(remoteUrl);
+                // Use a token-in-URL for just this command.
+                // Note: We keep the pull target explicit to avoid git prompting for credentials.
+                string authenticatedUrl = $"https://{token}@{uri.Host}{uri.PathAndQuery}";
+                return RunGitCommand(path, $"pull {authenticatedUrl}");
+            }
+
+            if (remoteUrl.StartsWith("git@"))
+            {
+                // SSH remotes should be handled by SSH keys/agent.
+                return RunGitCommand(path, "pull");
+            }
+
+            // Unknown format: try a normal pull, which might still work.
+            return RunGitCommand(path, "pull");
+        }
+
         private static string GetSelectedPath()
         {
             string assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
             if (string.IsNullOrEmpty(assetPath)) return null;
             string fullPath = Path.GetFullPath(assetPath);
             return Directory.Exists(fullPath) ? fullPath : Path.GetDirectoryName(fullPath);
+        }
+
+        internal static bool IsGitRepositoryRoot(string directory)
+        {
+            string gitDirectory = Path.Combine(directory, ".git");
+            return Directory.Exists(gitDirectory) || File.Exists(gitDirectory);
+        }
+
+        internal static string FindAncestorGitRepoRoot(string startDir)
+        {
+            try
+            {
+                var seen = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                string directory = Path.GetFullPath(startDir);
+                while (!string.IsNullOrEmpty(directory) && !seen.Contains(directory))
+                {
+                    if (IsGitRepositoryRoot(directory)) return directory;
+                    seen.Add(directory);
+                    var parent = Directory.GetParent(directory);
+                    if (parent == null) break;
+                    directory = parent.FullName;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Git Sync] Failed to find ancestor repo root from '{startDir}': {e.Message}");
+            }
+            return null;
+        }
+
+        internal static string TrimToSingleLine(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+            value = value.Replace("\r", "");
+            var index = value.IndexOf('\n');
+            return index >= 0 ? value.Substring(0, index) : value;
         }
     }
 }
