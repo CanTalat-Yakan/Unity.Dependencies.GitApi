@@ -1,5 +1,5 @@
 {
-    "name": "UnityEssentials.GitFolderSynchronizer.Editor",
+    "name": "UnityEssentials.Dependencies.GitApi.Editor",
     "rootNamespace": "UnityEssentials",
     "references": [
         "GUID:0383f1d3ce7e06706b4a0a19fe636598",
