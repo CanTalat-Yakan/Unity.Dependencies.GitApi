@@ -1,13 +1,14 @@
 {
   "name": "com.unityessentials.core.dependencies.gitapi",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "displayName": "Dependencies GitApi",
   "description": "This is a part of the UnityEssentials Ecosystem",
   "unity": "6000.0",
   "unityRelease": "",
+  "resolutionStrategy": "highestPatch",
   "dependencies": {
-    "com.unityessentials.editor.drawer.windowbuilder": "~2.0.0",
-    "com.unityessentials.editor.fetcher.mouseinput": "~2.0.0"
+    "com.unityessentials.editor.drawer.windowbuilder": "2.0.0",
+    "com.unityessentials.editor.fetcher.mouseinput": "2.0.0"
   },
   "keywords": [],
   "author": {
