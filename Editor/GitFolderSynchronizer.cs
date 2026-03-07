@@ -8,7 +8,7 @@ using Debug = UnityEngine.Debug;
 
 namespace UnityEssentials
 {
-    public partial class GitFolderSynchronizer
+    public partial class GitApi
     {
         private const string TokenKey = "GitToken";
 
@@ -144,6 +144,11 @@ namespace UnityEssentials
         /// command. A value of 0 indicates success; non-zero indicates failure.</description></item> </list></returns>
         private static (string output, string error, int exitCode) RunPushGitCommand(string path, string token)
         {
+            return RunPushGitCommand(path, token, "HEAD");
+        }
+
+        private static (string output, string error, int exitCode) RunPushGitCommand(string path, string token, string pushArguments)
+        {
             if (string.IsNullOrEmpty(token))
             {
                 Debug.LogError("[Git] No token found for push operation");
@@ -166,7 +171,7 @@ namespace UnityEssentials
             {
                 // For HTTPS URLs, insert the token
                 var uri = new Uri(remoteUrl);
-                authenticatedUrl = $"https://{token}@{uri.Host}{uri.PathAndQuery} HEAD";
+                authenticatedUrl = $"https://{token}@{uri.Host}{uri.PathAndQuery}";
             }
             else if (remoteUrl.StartsWith("git@"))
             {
@@ -181,7 +186,8 @@ namespace UnityEssentials
             }
 
             // Execute the push with the authenticated URL
-            return RunGitCommand(path, $"push {authenticatedUrl}");
+            string effectivePushArguments = string.IsNullOrWhiteSpace(pushArguments) ? "HEAD" : pushArguments;
+            return RunGitCommand(path, $"push {authenticatedUrl} {effectivePushArguments}");
         }
 
         private static (string output, string error, int exitCode) RunPullGitCommand(string path, string token)

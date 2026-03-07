@@ -5,17 +5,17 @@ using UnityEngine;
 
 namespace UnityEssentials
 {
-    public partial class GitFolderSynchronizer
+    public partial class GitApi
     {
         [MenuItem("Assets/Git/Fetch and Pull", true)]
-        public static bool ValidateGitFetchPull()
+        public static bool ValidateGitFetchAndPull()
         {
             string path = GetSelectedPath();
             return !string.IsNullOrEmpty(path) && Directory.Exists(Path.Combine(path, ".git"));
         }
 
         [MenuItem("Assets/Git/Fetch and Pull", priority = 2011)]
-        public static void FetchPull()
+        public static void FetchAndPull()
         {
             string path = GetSelectedPath();
             if (string.IsNullOrEmpty(path))

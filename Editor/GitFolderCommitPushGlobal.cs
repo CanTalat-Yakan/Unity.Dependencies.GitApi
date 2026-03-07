@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace UnityEssentials
 {
-    public partial class GitFolderSynchronizer
+    public partial class GitApi
     {
         private const string MenuTitle = "Git Commit & Push All Changes";
         private const string ReportSectionTitle = "Per-Repository Summary:";
@@ -149,6 +149,12 @@ namespace UnityEssentials
                     }
 
                     RunGitCommand(dir, "fetch");
+
+                    if (hasUncommitted && TryGetPackageJsonVersion(dir, out string pushedVersion))
+                    {
+                        report($"{folderName}: tagging v{pushedVersion}…", Base(6, 6));
+                        TryCreateAndPushVersionTag(dir, token, pushedVersion);
+                    }
 
                     pushed++;
                     var label = hasUncommitted ? "Committed and Pushed" : "Pushed";

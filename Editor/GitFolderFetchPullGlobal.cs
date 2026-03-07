@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace UnityEssentials
 {
-    public partial class GitFolderSynchronizer
+    public partial class GitApi
     {
         private const string FetchPullMenuTitle = "Git Fetch & Pull All Changes";
         private const string FetchPullReportSectionTitle = "Per-Repository Summary:";

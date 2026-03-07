@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace UnityEssentials
 {
-    public partial class GitFolderSynchronizer
+    public partial class GitApi
     {
         public EditorWindowBuilder Window;
         public Action Repaint;
@@ -212,7 +212,7 @@ namespace UnityEssentials
                         if (string.IsNullOrEmpty(path)) return;
 
                         // Bump package.json patch version before staging/committing (if package.json exists).
-                        TryBumpPackageJsonPatchVersion(path, out _, out _);
+                        TryBumpPackageJsonPatchVersion(path, out _, out string bumpedVersion);
 
                         report("Staging changes...", 0.2f);
                         RunGitCommand(path, "add .");
@@ -224,6 +224,7 @@ namespace UnityEssentials
 
                         report("Creating commit...", 0.45f);
                         var (commitOut, commitErr, commitCode) = RunGitCommand(path, $"commit -m \"{effectiveMessage}\"");
+                        bool commitSucceeded = commitCode == 0;
                         if (emptyCommitMessage && !string.IsNullOrEmpty(commitOut) && commitOut.Length >= 30)
                         {
                             // Mirror original output post-processing
@@ -236,10 +237,17 @@ namespace UnityEssentials
 
                         report("Pushing to remote...", 0.7f);
                         var (pushOut, pushErr, pushCode) = RunPushGitCommand(path, capturedToken);
+                        bool pushSucceeded = pushCode == 0;
                         if (pushCode != 0 && !string.IsNullOrEmpty(pushErr))
                             Debug.LogError("[Git] " + pushErr);
                         else if (!string.IsNullOrEmpty(pushOut))
                             Debug.Log("[Git] " + pushOut);
+
+                        if (commitSucceeded && pushSucceeded && !string.IsNullOrWhiteSpace(bumpedVersion))
+                        {
+                            report($"Tagging v{bumpedVersion} and pushing tags...", 0.82f);
+                            TryCreateAndPushVersionTag(path, capturedToken, bumpedVersion);
+                        }
 
                         report("Updating tracking info...", 0.9f);
                         RunGitCommand(path, "fetch");

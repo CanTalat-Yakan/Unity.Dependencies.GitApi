@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace UnityEssentials
 {
-    public partial class GitFolderSynchronizer
+    public partial class GitApi
     {
         // Tries to bump package.json version (patch +1) in repo root.
         // Returns true if version was updated and written.
@@ -28,7 +28,7 @@ namespace UnityEssentials
                 // Minimal, dependency-free JSON edit:
                 // Find: "version" : "<semver>" where semver is strictly X.Y.Z (no prerelease/build).
                 // We skip more complex formats on purpose to avoid unintended edits.
-                var regex = new Regex("\\\"version\\\"\\s*:\\s*\\\"(?<ver>(?<maj>\\d+)\\.(?<min>\\d+)\\.(?<pat>\\d+))\\\"", RegexOptions.CultureInvariant);
+                var regex = CreateSimpleSemverRegex();
                 var match = regex.Match(json);
                 if (!match.Success)
                 {
@@ -59,6 +59,40 @@ namespace UnityEssentials
                 Debug.LogWarning($"[Git] Failed to bump package.json version at '{packageJsonPath}': {ex.Message}");
                 return false;
             }
+        }
+
+        // Reads package.json version when it matches a strict X.Y.Z semver.
+        private static bool TryGetPackageJsonVersion(string repositoryRoot, out string version)
+        {
+            version = null;
+
+            if (string.IsNullOrEmpty(repositoryRoot))
+                return false;
+
+            string packageJsonPath = Path.Combine(repositoryRoot, "package.json");
+            if (!File.Exists(packageJsonPath))
+                return false;
+
+            try
+            {
+                string json = File.ReadAllText(packageJsonPath);
+                var match = CreateSimpleSemverRegex().Match(json);
+                if (!match.Success)
+                    return false;
+
+                version = match.Groups["ver"].Value;
+                return !string.IsNullOrWhiteSpace(version);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Git] Failed to read package.json version at '{packageJsonPath}': {ex.Message}");
+                return false;
+            }
+        }
+
+        private static Regex CreateSimpleSemverRegex()
+        {
+            return new Regex("\\\"version\\\"\\s*:\\s*\\\"(?<ver>(?<maj>\\d+)\\.(?<min>\\d+)\\.(?<pat>\\d+))\\\"", RegexOptions.CultureInvariant);
         }
     }
 }

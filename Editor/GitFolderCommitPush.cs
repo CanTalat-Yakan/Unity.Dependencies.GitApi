@@ -7,10 +7,10 @@ using UnityEngine;
 
 namespace UnityEssentials
 {
-    public partial class GitFolderSynchronizer
+    public partial class GitApi
     {
         [MenuItem("Assets/Git/Commit and Push", true)]
-        public static bool ValidateGitFolderSynchronizer()
+        public static bool ValidateGitCommitAndPush()
         {
             string path = GetSelectedPath();
             return !string.IsNullOrEmpty(path)
@@ -19,12 +19,12 @@ namespace UnityEssentials
         }
 
         [MenuItem("Assets/Git/Commit and Push", priority = 2010)]
-        public static void ShowWindow()
+        public static void CommitAndPush()
         {
             string path = GetSelectedPath();
             if (!string.IsNullOrEmpty(path))
             {
-                var editor = new GitFolderSynchronizer();
+                var editor = new GitApi();
                 editor.Token = EditorPrefs.GetString(TokenKey, "");
                 editor.RefreshState(path);
 
@@ -124,6 +124,46 @@ namespace UnityEssentials
 
             if (!string.IsNullOrEmpty(pushError) && exitCode != 0)
                 Debug.LogError("[Git] " + pushError);
+        }
+
+        private static void TryCreateAndPushVersionTag(string path, string token, string preferredVersion = null)
+        {
+            if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(token))
+                return;
+
+            string version = preferredVersion;
+            if (string.IsNullOrWhiteSpace(version) && !TryGetPackageJsonVersion(path, out version))
+                return;
+
+            if (string.IsNullOrWhiteSpace(version))
+                return;
+
+            string tagName = $"v{version}";
+
+            // If the tag already exists locally, reuse it and just ensure tags are pushed.
+            var (_, _, tagExistsCode) = RunGitCommand(path, $"rev-parse -q --verify refs/tags/{tagName}");
+            if (tagExistsCode != 0)
+            {
+                var (tagOut, tagErr, tagCode) = RunGitCommand(path, $"tag {tagName}");
+                if (tagCode != 0)
+                {
+                    Debug.LogError($"[Git] Failed to create tag '{tagName}': {tagErr}");
+                    return;
+                }
+
+                if (!string.IsNullOrEmpty(tagOut))
+                    Debug.Log("[Git] " + tagOut);
+            }
+
+            var (pushTagsOut, pushTagsErr, pushTagsCode) = RunPushGitCommand(path, token, "--tags");
+            if (pushTagsCode != 0)
+            {
+                Debug.LogError($"[Git] Failed to push tags for '{Path.GetFileName(path)}': {pushTagsErr}");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(pushTagsOut))
+                Debug.Log("[Git] " + pushTagsOut);
         }
 
         private static bool HasUncommittedChanges(string path)
