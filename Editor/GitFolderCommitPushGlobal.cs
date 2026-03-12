@@ -13,7 +13,7 @@ namespace UnityEssentials
         private const string MenuTitle = "Git Commit & Push All Changes";
         private const string ReportSectionTitle = "Per-Repository Summary:";
 
-        [MenuItem("Tools/" + MenuTitle, priority = -9000)]
+        [MenuItem("Tools/" + MenuTitle, priority = -9001)]
         public static void CommitAndPushAllChanges()
         {
             string assetsPath = Application.dataPath; // absolute path to Assets/

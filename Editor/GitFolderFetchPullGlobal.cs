@@ -13,7 +13,7 @@ namespace UnityEssentials
         private const string FetchPullMenuTitle = "Git Fetch & Pull All Changes";
         private const string FetchPullReportSectionTitle = "Per-Repository Summary:";
 
-        [MenuItem("Tools/" + FetchPullMenuTitle, priority = -9001)]
+        [MenuItem("Tools/" + FetchPullMenuTitle, priority = -9000)]
         public static void FetchAndPullAllChanges()
         {
             string assetsPath = Application.dataPath; // absolute path to Assets/
